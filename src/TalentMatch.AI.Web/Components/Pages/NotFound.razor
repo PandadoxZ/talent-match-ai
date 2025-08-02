@@ -1,0 +1,90 @@
+﻿@page "/{*route:nonfile}"
+
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="not-found-container">
+    <div class="not-found-content">
+        <div class="error-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-circle">
+                <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+        
+        <h1>Oops!</h1>
+        <p>The page you're looking for doesn't exist.</p>
+        
+        <div class="redirect-info">
+            <p>Redirecting to CV Analysis in <span class="countdown">@_countdown</span> seconds...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: @GetProgressPercentage()%"></div>
+            </div>
+        </div>
+        
+        <button class="redirect-btn" @onclick="RedirectNow">
+            Go to CV Analysis Now
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Route { get; set; }
+    
+    private int _countdown = 5;
+    private CancellationTokenSource? _cancellationTokenSource;
+    private bool _hasNavigated;
+
+    protected override void OnInitialized()
+    {
+        _cancellationTokenSource = new CancellationTokenSource();
+        _ = StartCountdownAsync(_cancellationTokenSource.Token);
+    }
+
+    private async Task StartCountdownAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+            
+            while (await timer.WaitForNextTickAsync(cancellationToken) && !_hasNavigated)
+            {
+                if (_countdown <= 0)
+                {
+                    if (!_hasNavigated)
+                    {
+                        _hasNavigated = true;
+                        Navigation.NavigateTo("/", forceLoad: false);
+                    }
+                    break;
+                }
+                
+                _countdown--;
+                StateHasChanged();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Timer was cancelled, which is expected during navigation
+        }
+    }
+    
+    private int GetProgressPercentage()
+    {
+        return (5 - _countdown) * 20;
+    }
+
+    private void RedirectNow()
+    {
+        if (_hasNavigated) return;
+        
+        _cancellationTokenSource?.Cancel();
+        Navigation.NavigateTo("/", forceLoad: false);
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+    }
+}
