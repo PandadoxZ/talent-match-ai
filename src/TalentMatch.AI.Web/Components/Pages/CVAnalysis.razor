@@ -1,4 +1,6 @@
 ﻿@page "/"
+@using TalentMatch.AI.Web.Components.Shared
+@using TalentMatch.AI.Web.Models
 
 <PageTitle>TalentMatch AI - CV Scoring Platform</PageTitle>
 
@@ -7,7 +9,68 @@
         <h1>TalentMatch AI</h1>
         <p>Upload your CV and job specification to get an AI-powered compatibility score</p>
     </header>
+    
+    <section class="upload-section">
+        <FileUploadCard 
+            Title="Upload CV"
+            Icon="FileUploadCard.IconType.Document"
+            UploadInstruction="Click to upload CV"
+            AcceptedFileTypes="_validCvFileTypes"
+            MaxFileSizeInMb="5"
+            OnFileUploaded="HandleCvUploaded"
+            IsDisabled="@_isAnalyzing" />
+
+        <FileUploadCard 
+            Title="Job Specification"
+            Icon="FileUploadCard.IconType.Chart"
+            UploadInstruction="Click to upload job spec"
+            AcceptedFileTypes="_validJobSpecFileTypes"
+            MaxFileSizeInMb="5"
+            OnFileUploaded="HandleJobUploaded"
+            IsDisabled="@_isAnalyzing" />
+    </section>
+    
+    <section class="analyze-section">
+        <button class="analyze-btn @(CanAnalyze() ? "" : "disabled")" disabled="@(!CanAnalyze() || _isAnalyzing)">
+            @if (_isAnalyzing)
+            {
+                <span>Analyzing...</span>
+            }
+            else
+            {
+                <span>Analyze CV Match</span>
+            }
+        </button>
+    </section>
 </div>
 
 @code {
+    private readonly IReadOnlyCollection<FileType> _validCvFileTypes =
+    [
+        FileType.Pdf,
+        FileType.MsWord
+    ];
+    private readonly IReadOnlyCollection<FileType> _validJobSpecFileTypes =
+    [
+        FileType.Pdf,
+        FileType.MsWord,
+        FileType.PlainText,
+    ];
+    private bool _isAnalyzing = false;
+    private UploadedFile? _cvFile;
+    private UploadedFile? _jobFile;
+
+    private bool CanAnalyze() => _cvFile != null && _jobFile != null && !_isAnalyzing;
+
+    private void HandleCvUploaded(UploadedFile? file)
+    {
+        _cvFile = file;
+        StateHasChanged();
+    }
+
+    private void HandleJobUploaded(UploadedFile? file)
+    {
+        _jobFile = file;
+        StateHasChanged();
+    }
 }

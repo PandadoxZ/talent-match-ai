@@ -1,0 +1,108 @@
+﻿.upload-card {
+    flex: 1;
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 2px dashed #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-card:hover:not(.disabled) {
+    border-color: #667eea;
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.upload-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.upload-card:hover:not(.disabled)::before {
+    opacity: 1;
+}
+
+.upload-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.upload-card h3 {
+    color: #2d3748;
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.upload-icon {
+    width: 24px;
+    height: 24px;
+    fill: #667eea;
+}
+
+.file-label {
+    display: block;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    border: 2px dashed #cbd5e0;
+    border-radius: 10px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #4a5568;
+}
+
+.file-label:hover:not(.disabled) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+.file-label.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.file-label svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+
+.file-info {
+    display: block;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.file-info.success {
+    background: #f0fff4;
+    border: 1px solid #9ae6b4;
+    color: #2f855a;
+}
+
+.file-info.error {
+    background: #ffcfd2;
+    border: 1px solid #e69aa5;
+    color: #852f45;
+}
+
+@media (max-width: 768px) {
+    .upload-card {
+        flex: 1 1 100%; /* Full width on small screens */
+    }
+}

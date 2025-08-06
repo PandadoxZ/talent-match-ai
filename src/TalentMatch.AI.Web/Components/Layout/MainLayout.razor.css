@@ -1,8 +1,7 @@
 .page {
-    position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    overflow-y: auto;
 }
 
 main {
@@ -29,3 +28,9 @@ main {
         right: 0.75rem;
         top: 0.5rem;
     }
+
+@media (max-width: 768px) {
+    .page {
+        overflow-y: visible;
+    }
+}

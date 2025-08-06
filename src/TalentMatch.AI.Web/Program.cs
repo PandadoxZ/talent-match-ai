@@ -1,9 +1,12 @@
 using TalentMatch.AI.Web.Components;
+using TalentMatch.AI.Web.Services.FileValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<IFileValidationService, FileValidationService>();
 
 var app = builder.Build();
 

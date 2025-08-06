@@ -1,0 +1,133 @@
+﻿@using TalentMatch.AI.Web.Helpers
+@using TalentMatch.AI.Web.Models
+@using TalentMatch.AI.Web.Services.FileValidation
+@inject IFileValidationService FileValidationService
+
+<div class="upload-card @(IsDisabled ? "disabled" : "")">
+    <h3>
+        @if (Icon == IconType.Document)
+        {
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+        }
+        else
+        {
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z"/>
+            </svg>
+        }
+        @Title
+    </h3>
+
+    <InputFile OnChange="HandleFileSelected" 
+               accept="@AcceptedFormats"
+               disabled="@IsDisabled"
+               style="display: none" 
+               id="@_inputId" />
+
+    <label for="@_inputId" class="file-label @(IsDisabled ? "disabled" : "")">
+        @if (Icon == IconType.Document)
+        {
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+        }
+        else
+        {
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z"/>
+            </svg>
+        }
+        <div>@UploadInstruction</div>
+        <div style="font-size: 0.9rem; margin-top: 5px;">@FormatDescription</div>
+    </label>
+
+    @if (_uploadedFile != null && _validationResult?.IsValid == true)
+    {
+        <div class="file-info success">
+            ✓ @_uploadedFile.FileName (@_uploadedFile.Size.ConvertToMegabytes() MB)
+        </div>
+    }
+    else if (_validationResult?.IsValid == false)
+    {
+        <div class="file-info error">
+            ✖ @(_validationResult.ErrorMessage ?? "Uploaded file is invalid")
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] 
+    public string Title { get; set; } = "";
+    
+    [Parameter]
+    public IconType Icon { get; set; } = IconType.Document;
+    
+    [Parameter]
+    public string UploadInstruction { get; set; } = "Click to upload document";
+    
+    [Parameter]
+    public IEnumerable<FileType> AcceptedFileTypes { get; set; } = [];
+    
+    [Parameter]
+    public uint MaxFileSizeInMb { get; set; } = 5;
+    
+    [Parameter]
+    public EventCallback<UploadedFile?> OnFileUploaded { get; set; }
+    
+    [Parameter]
+    public bool IsDisabled { get; set; }
+
+    public enum IconType
+    {
+        Document,
+        Chart
+    }
+    
+    private readonly string _inputId = $"file-upload-{Guid.NewGuid()}";
+    private string AcceptedFormats => string.Join(",", AcceptedFileTypes.SelectMany(ft => ft.Extensions));
+    private string FormatDescription
+    {
+        get
+        {
+            var fileTypes = AcceptedFileTypes.Select(ft => ft.Name.ToUpper()).ToList();
+            var description = string.Join(", ", fileTypes);
+            return $"{description} (Max {MaxFileSizeInMb}MB)";
+        }
+    }
+
+    private FileValidationResult? _validationResult;
+    private UploadedFile? _uploadedFile;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        if (e.FileCount > 0)
+        {
+            var file = e.File;
+            long maxFileSize = MaxFileSizeInMb * 1024 * 1024;
+            
+            _uploadedFile = new UploadedFile
+            {
+                FileName = file.Name,
+                Size = file.Size,
+                ContentType = file.ContentType,
+                File = file
+            };
+
+            _validationResult = await FileValidationService.ValidateFileAsync(_uploadedFile, AcceptedFileTypes, maxFileSize);
+            
+            if (!_validationResult.IsValid)
+            {
+                return;
+            }
+
+            await OnFileUploaded.InvokeAsync(_uploadedFile);
+        }
+        else
+        {
+            _uploadedFile = null;
+            await OnFileUploaded.InvokeAsync(null);
+        }
+    }
+}
